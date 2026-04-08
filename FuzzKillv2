@@ -1,0 +1,103 @@
+#!/bin/bash
+
+# -----------------------------
+# HELP (DETAILED)
+# -----------------------------
+show_help() {
+    echo "================ FUZZY KILL HELP ================"
+    echo ""
+    echo "This tool helps you find and terminate processes"
+    echo "using partial (fuzzy) matches."
+    echo ""
+    echo "OPTIONS:"
+    echo "  1) Search by PID  (-id)"
+    echo "     Example: 23 → matches 123, 2301, etc."
+    echo ""
+    echo "  2) Search by Name (-n)"
+    echo "     Example: chrome → matches all chrome processes"
+    echo ""
+    echo "WORKFLOW:"
+    echo "  - Search for a process"
+    echo "  - View numbered results"
+    echo "  - Select which process(es) to kill"
+    echo ""
+    echo "COMMANDS USED:"
+    echo "  ps, grep, awk, xargs, kill"
+    echo ""
+    echo "================================================="
+}
+
+# -----------------------------
+# DISPLAY MENU
+# -----------------------------
+echo "=================================="
+echo "        FUZZY PROCESS KILL        "
+echo "=================================="
+echo "What would you like to do?"
+echo ""
+echo "1) Search by PID"
+echo "2) Search by Process Name"
+echo "3) Help"
+echo "4) Exit"
+echo ""
+
+read -p "Enter choice: " choice
+
+# -----------------------------
+# HANDLE MENU
+# -----------------------------
+case $choice in
+    1)
+        read -p "Enter part of PID: " search
+        results=$(ps -eo pid,comm,state,%cpu | grep "$search")
+        ;;
+    2)
+        read -p "Enter process name: " search
+        results=$(ps -eo pid,comm,state,%cpu | grep -i "$search")
+        ;;
+    3)
+        show_help
+        exit
+        ;;
+    4)
+        echo "Goodbye."
+        exit
+        ;;
+    *)
+        echo "Invalid option."
+        exit
+        ;;
+esac
+
+# -----------------------------
+# NO RESULTS CHECK
+# -----------------------------
+[ -z "$results" ] && echo "No matches found." && exit
+
+# -----------------------------
+# DISPLAY RESULTS
+# -----------------------------
+echo ""
+echo "Results:"
+echo "--------------------------------"
+
+mapfile -t lines <<< "$results"
+
+for i in "${!lines[@]}"; do
+    echo "$((i+1))) ${lines[$i]}"
+done
+
+echo "--------------------------------"
+echo "Enter number(s) to kill:"
+read choices
+
+# -----------------------------
+# KILL SELECTED
+# -----------------------------
+for num in $choices; do
+    line="${lines[$((num-1))]}"
+    pid=$(echo "$line" | awk '{print $1}')
+
+    echo "Killing PID: $pid"
+    echo "$pid" | xargs kill
+done
