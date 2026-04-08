@@ -99,7 +99,7 @@ while true; do
         pid=$(echo "${lines[$i]}" | awk '{print $1}')
         name=$(echo "${lines[$i]}" | awk '{print $2}')
         state=$(echo "${lines[$i]}" | awk '{print $3}')
-        cpu=$(echo "${lines[$i]}" | awk '{print $4}')
+        cpu=$(echo "${lines[$i]}" | awk '{printf "%.2f", $4}')
 
         printf "%-3s %-7s %-20s %-6s %-6s\n" "$((i+1))" "$pid" "$name" "$state" "$cpu"
     done
