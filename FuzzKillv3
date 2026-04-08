@@ -1,0 +1,123 @@
+#!/bin/bash
+
+# -----------------------------
+# HELP MENU
+# -----------------------------
+show_help() {
+    echo "================ FUZZY KILL HELP ================"
+    echo ""
+    echo "This tool helps you find and terminate processes"
+    echo "using fuzzy (partial) matching."
+    echo ""
+    echo "HOW TO USE:"
+    echo "  1) Search by PID (partial match)"
+    echo "  2) Search by process name (partial match)"
+    echo "  3) View all running processes"
+    echo ""
+    echo "WORKFLOW:"
+    echo "  - Choose an option"
+    echo "  - Review results"
+    echo "  - Select process numbers to kill"
+    echo ""
+    echo "COMMANDS USED:"
+    echo "  ps, grep, awk, xargs, kill"
+    echo ""
+    echo "================================================="
+}
+
+# -----------------------------
+# MAIN LOOP
+# -----------------------------
+while true; do
+
+    echo ""
+    echo "=================================="
+    echo "        FUZZY PROCESS KILL        "
+    echo "=================================="
+    echo "1) Search by PID"
+    echo "2) Search by Process Name"
+    echo "3) Show ALL Processes"
+    echo "4) Help"
+    echo "5) Exit"
+    echo ""
+
+    read -p "Enter choice: " choice
+
+    results=""
+
+    # -----------------------------
+    # HANDLE MENU OPTIONS
+    # -----------------------------
+    case $choice in
+        1)
+            read -p "Enter part of PID: " search
+            results=$(ps -eo pid,comm,state,%cpu --no-headers | grep "$search")
+            ;;
+        2)
+            read -p "Enter process name: " search
+            results=$(ps -eo pid,comm,state,%cpu --no-headers | grep -i "$search")
+            ;;
+        3)
+            echo "[*] Showing running processes..."
+            results=$(ps -eo pid,comm,state,%cpu --no-headers | head -n 25)
+            ;;
+        4)
+            show_help
+            continue
+            ;;
+        5)
+            echo "Goodbye."
+            exit
+            ;;
+        *)
+            echo "Invalid option."
+            continue
+            ;;
+    esac
+
+    # -----------------------------
+    # CHECK RESULTS
+    # -----------------------------
+    if [ -z "$results" ]; then
+        echo "No matches found."
+        continue
+    fi
+
+    # -----------------------------
+    # DISPLAY RESULTS
+    # -----------------------------
+    echo ""
+    echo "Results:"
+    echo "------------------------------------------------------"
+
+    mapfile -t lines <<< "$results"
+
+    printf "%-3s %-7s %-20s %-6s %-6s\n" "#" "PID" "NAME" "STATE" "CPU"
+    echo "------------------------------------------------------"
+
+    for i in "${!lines[@]}"; do
+        pid=$(echo "${lines[$i]}" | awk '{print $1}')
+        name=$(echo "${lines[$i]}" | awk '{print $2}')
+        state=$(echo "${lines[$i]}" | awk '{print $3}')
+        cpu=$(echo "${lines[$i]}" | awk '{print $4}')
+
+        printf "%-3s %-7s %-20s %-6s %-6s\n" "$((i+1))" "$pid" "$name" "$state" "$cpu"
+    done
+
+    echo "------------------------------------------------------"
+    read -p "Enter number(s) to kill (or press Enter to cancel): " choices
+
+    # -----------------------------
+    # KILL SELECTED PROCESSES
+    # -----------------------------
+    for num in $choices; do
+        line="${lines[$((num-1))]}"
+        pid=$(echo "$line" | awk '{print $1}')
+
+        if [ -n "$pid" ]; then
+            echo "Killing PID: $pid"
+            echo "$pid" | xargs kill 2>/dev/null
+        fi
+    done
+
+done
