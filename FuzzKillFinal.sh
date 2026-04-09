@@ -28,7 +28,7 @@ show_help() {
     echo "  1  Search by PID (partial match)"
     echo "  2  Search by process name (partial match)"
     echo "  3  Show all running processes (sorted by CPU)"
-    echo "  -h Show this help menu"
+    echo "  4 Show this help menu"
     echo ""
     echo "IMPORTANT:"
     echo "  When selecting a process to kill, you MUST use the"
