@@ -28,7 +28,7 @@ show_help() {
     echo "  1  Search by PID (partial match)"
     echo "  2  Search by process name (partial match)"
     echo "  3  Show all running processes (sorted by CPU)"
-    echo "  -h Show this help menu"
+    echo "  4 Show this help menu"
     echo ""
     echo "IMPORTANT:"
     echo "  When selecting a process to kill, you MUST use the"
@@ -65,7 +65,7 @@ while true; do
     echo "1) Search by PID"
     echo "2) Search by Process Name"
     echo "3) Show ALL Processes (sorted by CPU)"
-    echo "-h) Help"
+    echo "4) Help"
     echo "5) Exit"
     echo ""
 
@@ -98,7 +98,7 @@ while true; do
             echo "[*] Showing running processes (sorted by CPU)..."
             results=$(ps -eo pid,comm,state,%cpu --no-headers --sort=-%cpu | head -n 25)
             ;;
-        -h)
+        4)
             # Show help page
             show_help
             continue
